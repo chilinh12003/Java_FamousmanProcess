@@ -43,7 +43,7 @@ public class Charge
 			this.value = value;
 		}
 
-		public Integer GetValue()
+		public int GetValue()
 		{
 			return this.value;
 		}

@@ -168,7 +168,7 @@ public class Answer extends ContentAbstract
 		{
 			mSubObj.mLastAnswerStatus = Play.Status.IncorrectAnswer;
 		}
-		mSuggestObj = CurrentData.Get_SuggestObj_BuyID(mSubObj.LastSuggestrID);
+		
 
 		mSubObj.LastAnswerDate = mCal_Current.getTime();
 		mSubObj.AnswerForSuggestID = mSubObj.LastSuggestrID;
@@ -227,6 +227,7 @@ public class Answer extends ContentAbstract
 			{
 				mObject.IncorrectCount++;
 			}
+			
 			mObject.LastUpdate = mCal_Current.getTime();
 
 			MyTableModel mTable = CurrentData.GetTable_SuggestCount();
@@ -333,8 +334,16 @@ public class Answer extends ContentAbstract
 				return AddToList();
 			}
 
+			mSuggestObj = CurrentData.Get_SuggestObj_BuyID(mSubObj.LastSuggestrID);
+			
+			if(mSuggestObj.IsNull())
+			{
+				mMTType = MTType.AnswerExpire;
+				return AddToList();
+			}
+			
 			UserAnswer = Get_UserAnswer();
-
+			
 			CreateUpdateSub();
 
 			// Cập nhật thông tin vào DB

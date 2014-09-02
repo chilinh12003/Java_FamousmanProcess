@@ -18,30 +18,30 @@ public class MovePlay extends Thread
 {
 	MyLogger mLog = new MyLogger(LocalConfig.LogConfigPath, this.getClass().toString());
 
-	public Integer CurrentPID = 1;
+	public int CurrentPID = 1;
 
 	public String MSISDN = "";
 
 	/**
 	 * Số lượng process Push MT được tạo ra
 	 */
-	public Integer ProcessNumber = 1;
+	public int ProcessNumber = 1;
 
 	/**
 	 * Thứ tự của 1 process
 	 */
-	public Integer ProcessIndex = 0;
+	public int ProcessIndex = 0;
 
 	/**
 	 * Số thứ tự (OrderID) trong table Subscriber, process sẽ lấy những record
 	 * có OrderID >= MaxOrderID
 	 */
-	public Integer MaxOrderID = 0;
+	public long MaxOrderID = 0;
 
 	/**
 	 * Tổng số record mỗi lần lấy lên để xử lý
 	 */
-	public Integer RowCount = 10;
+	public int RowCount = 10;
 
 	/**
 	 * Thời gian bắt đầu chạy thead
@@ -126,8 +126,8 @@ public class MovePlay extends Thread
 		{
 			// Lấy danh sách(Para_1 = RowCount, Para_2 = LogID,
 			// Para_3 = ProcessNumber, Para_4 = ProcessIndex )
-			return mPlay.Select(3, RowCount.toString(), MaxOrderID.toString(), ProcessNumber.toString(),
-					ProcessIndex.toString());
+			return mPlay.Select(3,Integer.toString(RowCount), Long.toString(MaxOrderID), Integer.toString(ProcessNumber),
+					Integer.toString(ProcessIndex));
 		}
 		catch (Exception ex)
 		{
@@ -148,7 +148,7 @@ public class MovePlay extends Thread
 
 			while (!mTable.IsEmpty())
 			{
-				MaxOrderID = Integer.parseInt(mTable.GetValueAt(mTable.GetRowCount() - 1, "LogID").toString());
+				MaxOrderID = Long.parseLong(mTable.GetValueAt(mTable.GetRowCount() - 1, "LogID").toString());
 
 				if (mPlayLog.Insert(0, mTable.GetXML()))
 				{

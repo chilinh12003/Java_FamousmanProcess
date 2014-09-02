@@ -73,7 +73,7 @@ public class CheckFinish extends Thread
 					{
 						mQuestionObj = CurrentData.Get_QuestionObj(mPlayObj_Winner.QuestionID);
 					}
-					
+
 					if (InsertWinner(mListSuggestCount_Min, mPlayObj_Winner, mQuestionObj))
 					{
 						// Insert MT thông báo người chiến thằng vào table news,
@@ -84,8 +84,8 @@ public class CheckFinish extends Thread
 					{
 						mLog.log.warn("Khong the insert xuong table winner");
 					}
-					
-					//Chuyển 2 table Play và SuggestCount sang Table Log
+
+					// Chuyển 2 table Play và SuggestCount sang Table Log
 					for (int j = 0; j < LocalConfig.FINISH_PROCESS_NUMBER; j++)
 					{
 						MovePlay mMovePlay = new MovePlay();
@@ -97,8 +97,8 @@ public class CheckFinish extends Thread
 						mMovePlay.start();
 						Thread.sleep(500);
 					}
-					
-					//Xoa du lieu SuggestCount
+
+					// Xoa du lieu SuggestCount
 					Delete_SuggestCount();
 				}
 			}
@@ -121,7 +121,7 @@ public class CheckFinish extends Thread
 			}
 		}
 	}
-	
+
 	private void Delete_SuggestCount() throws Exception
 	{
 		MyTableModel mTable = new MyTableModel(null, null);
@@ -129,7 +129,7 @@ public class CheckFinish extends Thread
 		{
 			SuggestCount mSuggestCount = new SuggestCount(LocalConfig.mDBConfig_MSSQL);
 			SuggestCountLog mSuggestCountLog = new SuggestCountLog(LocalConfig.mDBConfig_MSSQL);
-			
+
 			mTable = mSuggestCount.Select(4);
 
 			if (mSuggestCountLog.Insert(0, mTable.GetXML()))
@@ -151,9 +151,10 @@ public class CheckFinish extends Thread
 			mLog.log.debug("Ket thuc di chuyen SuggestCount --> SuggestCountLog");
 		}
 	}
-	
+
 	/**
 	 * Insert xuống table news, chờ admin duyệt để push tin
+	 * 
 	 * @param mPlayObj_Winner
 	 * @param mQuestionObj
 	 * @return
@@ -162,9 +163,9 @@ public class CheckFinish extends Thread
 	private boolean InsertNotifyWinner(PlayObject mPlayObj_Winner, QuestionObject mQuestionObj) throws Exception
 	{
 
-		if(mPlayObj_Winner.IsNull())
+		if (mPlayObj_Winner.IsNull())
 			return true;
-		
+
 		String MT = Common.GetDefineMT_Message(MTType.NotifyWinner);
 		String MSISDN = MyCheck.ValidPhoneNumber(mPlayObj_Winner.MSISDN, "0");
 		MSISDN = MSISDN.substring(0, MSISDN.length() - 2) + "xx";
@@ -189,21 +190,21 @@ public class CheckFinish extends Thread
 		mNewsObj.QuestionID = mQuestionObj.QuestionID;
 		mNewsObj.CreateDate = Calendar.getInstance().getTime();
 		mNewsObj.Priority = 0;
-		
+
 		News mNews = new News(LocalConfig.mDBConfig_MSSQL);
-		
+
 		MyTableModel mTable_News = mNews.Select(0);
-		mTable_News =  mNewsObj.AddNewRow(mTable_News);
-		
+		mTable_News = mNewsObj.AddNewRow(mTable_News);
+
 		return mNews.Insert(0, mTable_News.GetXML());
 	}
 
 	private boolean InsertWinner(Vector<SuggestCountObject> mListSuggestCount_Min, PlayObject mPlayObj_Winner,
 			QuestionObject mQuestionObj) throws Exception
 	{
-		if(mPlayObj_Winner.IsNull())
+		if (mPlayObj_Winner.IsNull())
 			return true;
-		
+
 		Winner mWinner = new Winner(LocalConfig.mDBConfig_MSSQL);
 		MyTableModel mTable_Winner = mWinner.Select(0);
 
@@ -221,7 +222,7 @@ public class CheckFinish extends Thread
 			SuggestCountObject mSuggestCountObj_Winner = new SuggestCountObject();
 			for (SuggestCountObject mObject : mListSuggestCount_Min)
 			{
-				if (mObject.SuggestID == mPlayObj_Winner.SuggestID)
+				if (mObject.SuggestID ==mPlayObj_Winner.SuggestID)
 				{
 					mSuggestCountObj_Winner = (SuggestCountObject) mObject.clone();
 					break;
@@ -267,7 +268,7 @@ public class CheckFinish extends Thread
 
 		// Số lượng mua dữ kiện ít nhất nhưng phải tồn tại câu trả
 		// lời đúng
-		Integer MinBuyCount = 1000000;
+		int MinBuyCount = 1000000;
 
 		// Tìm giá trị nhỏ nhất của Số lần mua dữ kiện
 		for (SuggestCountObject mObject : mListSuggestCount)
@@ -308,10 +309,10 @@ public class CheckFinish extends Thread
 		// Lấy danh sách KH đã trả lời đúng và ít nhất
 		for (SuggestCountObject mObject : mListSuggestCount_Min)
 		{
-			Integer MaxLogID = 0;
+			long MaxLogID = 0;
 			MyTableModel mTable_Play = mPlay.Select(4, "10", Play.PlayType.Answer.GetValue().toString(),
-					Play.Status.CorrectAnswer.GetValue().toString(), mObject.SuggestID.toString(), MaxLogID.toString(),
-					"1", "0");
+					Integer.toString(Play.Status.CorrectAnswer.GetValue()), Integer.toString(mObject.SuggestID),
+					Long.toString(MaxLogID), "1", "0");
 
 			while (Program.processData && mTable_Play != null && mTable_Play.GetRowCount() > 0)
 			{
@@ -323,8 +324,8 @@ public class CheckFinish extends Thread
 				}
 
 				mTable_Play = mPlay.Select(4, "10", Play.PlayType.Answer.GetValue().toString(),
-						Play.Status.CorrectAnswer.GetValue().toString(), mObject.SuggestID.toString(),
-						MaxLogID.toString(), "1", "0");
+						Integer.toString(Play.Status.CorrectAnswer.GetValue()), Integer.toString(mObject.SuggestID),
+						Long.toString(MaxLogID), "1", "0");
 			}
 		}
 
@@ -343,5 +344,5 @@ public class CheckFinish extends Thread
 		}
 		return mPlayObj_Winner;
 	}
-	
+
 }

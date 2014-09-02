@@ -174,36 +174,43 @@ public class CurrentData
 		return QuestionObject.Convert(mTable);
 	}
 
-	public static synchronized QuestionObject Get_QuestionObj(Integer QuestionID) throws Exception
+	public static synchronized QuestionObject Get_QuestionObj(int QuestionID) throws Exception
 	{
 
 		Question mQuestion = new Question(LocalConfig.mDBConfig_MSSQL);
-		MyTableModel mTable = mQuestion.Select(1, QuestionID.toString());
+		MyTableModel mTable = mQuestion.Select(1, Integer.toString(QuestionID));
 
 		return QuestionObject.Convert(mTable);
 	}
 
 	/**
 	 * Thêm những Suggest còn thiếu và SuggestCount
+	 * 
 	 * @throws Exception
 	 */
 	static void AddToSuggestCount() throws Exception
 	{
 		Vector<SuggestObject> mList_SuggestObj = Get_Current_SuggestObj();
-		
+
 		if (mList_SuggestObj.size() == Current_SuggestCountObj.size())
 			return;
 		else
 		{
-			//Thêm các SuggestCount chưa có ai mua trước đây (còn thiếu)
+			// Thêm các SuggestCount chưa có ai mua trước đây (còn thiếu)
 			for (SuggestObject mSuggestObj : mList_SuggestObj)
 			{
 
+				boolean Exist = false;
 				for (SuggestCountObject mSuggestCountObj : Current_SuggestCountObj)
 				{
 					if (mSuggestObj.SuggestID == mSuggestCountObj.SuggestID)
-						continue;
+					{
+						Exist = true;
+						break;
+					}
 				}
+				if (Exist)
+					continue;
 				
 				SuggestCountObject mObject = new SuggestCountObject();
 				mObject.SuggestID = mSuggestObj.SuggestID;
@@ -215,7 +222,7 @@ public class CurrentData
 			}
 		}
 	}
-	
+
 	private static Vector<SuggestCountObject> Current_SuggestCountObj = new Vector<SuggestCountObject>();
 
 	/**
@@ -239,12 +246,12 @@ public class CurrentData
 		}
 
 		SuggestCount mSuggestCount = new SuggestCount(LocalConfig.mDBConfig_MSSQL);
-		MyTableModel mTable = mSuggestCount.Select(2, Get_Current_QuestionObj().QuestionID.toString());
+		MyTableModel mTable = mSuggestCount.Select(2, Integer.toString(Get_Current_QuestionObj().QuestionID));
 		if (mTable != null && mTable.GetRowCount() > 1)
 		{
 			Current_SuggestCountObj = SuggestCountObject.ConvertToList(mTable);
 		}
-		
+
 		AddToSuggestCount();
 		return Current_SuggestCountObj;
 	}
@@ -260,6 +267,7 @@ public class CurrentData
 	{
 		if (Get_Current_SuggestCountObj().size() < 1)
 			return new SuggestCountObject();
+
 		for (SuggestCountObject mObject : Get_Current_SuggestCountObj())
 		{
 			if (mObject.SuggestID == mSuggestObj.SuggestID)
@@ -279,7 +287,8 @@ public class CurrentData
 	 */
 	public static synchronized Vector<SuggestObject> Get_Current_SuggestObj() throws Exception
 	{
-		if (Current_SuggestObj != null && Current_SuggestObj.size() > 0
+
+		if (Current_SuggestObj != null && Current_SuggestObj.size() == 20
 				&& Current_SuggestObj.get(0).QuestionID == Get_Current_QuestionObj().QuestionID)
 			return Current_SuggestObj;
 
@@ -288,16 +297,17 @@ public class CurrentData
 
 		Suggest mSuggest = new Suggest(LocalConfig.mDBConfig_MSSQL);
 
-		MyTableModel mTable = mSuggest.Select(2, Get_Current_QuestionObj().QuestionID.toString());
+		MyTableModel mTable = mSuggest.Select(2, Integer.toString(Get_Current_QuestionObj().QuestionID));
 
 		Current_SuggestObj = SuggestObject.ConvertToList(mTable);
 		return Current_SuggestObj;
 	}
 
-	public static synchronized SuggestObject Get_SuggestObj(Integer OrderNuber) throws Exception
+	public static synchronized SuggestObject Get_SuggestObj(int OrderNuber) throws Exception
 	{
 		if (Get_Current_SuggestObj().size() < 1)
 			return new SuggestObject();
+
 		for (SuggestObject mObject : Get_Current_SuggestObj())
 		{
 			if (mObject.OrderNumber == OrderNuber)
@@ -307,17 +317,28 @@ public class CurrentData
 		return new SuggestObject();
 	}
 
-	public static synchronized SuggestObject Get_SuggestObj_BuyID(Integer SuggestID) throws Exception
+	public static synchronized SuggestObject Get_SuggestObj_BuyID(int SuggestID) throws Exception
 	{
-		if (Get_Current_SuggestObj().size() < 1)
-			return new SuggestObject();
+		SuggestObject mSuggestObj = new SuggestObject();
+
 		for (SuggestObject mObject : Get_Current_SuggestObj())
 		{
 			if (mObject.SuggestID == SuggestID)
-				return mObject;
+				mSuggestObj = mObject;
 		}
 
-		return new SuggestObject();
+		if (mSuggestObj.IsNull())
+		{
+			Suggest mSuggest = new Suggest(LocalConfig.mDBConfig_MSSQL);
+
+			MyTableModel mTable = mSuggest.Select(1, Integer.toString(SuggestID));
+			if (mTable != null && mTable.GetRowCount() > 0)
+			{
+				mSuggestObj = SuggestObject.Convert(mTable);
+				Get_Current_SuggestObj().add(mSuggestObj);
+			}
+		}
+		return mSuggestObj;
 	}
 
 }

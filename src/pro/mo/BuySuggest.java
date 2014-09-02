@@ -107,7 +107,7 @@ public class BuySuggest extends ContentAbstract
 					
 					String MTContent = mSuggestObj.NotifyMT;
 					
-					MTContent = MTContent.replace("[BuyCount]", mSuggestCountObj.BuyCount.toString());
+					MTContent = MTContent.replace("[BuyCount]", Integer.toString(mSuggestCountObj.BuyCount));
 					MTContent = MTContent.replace("[AnswerCount]", TotalAnswer.toString());
 					mMsgObject.setUsertext(MTContent);
 					mMsgObject.setContenttype(LocalConfig.LONG_MESSAGE_CONTENT_TYPE);
@@ -176,17 +176,7 @@ public class BuySuggest extends ContentAbstract
 	 * @throws Exception
 	 */
 	private void CreateUpdateSub() throws Exception
-	{
-
-		if (mSubObj.CheckLastSuggestDate(mCal_Current))
-		{
-			mSubObj.SuggestByDay++;
-		}
-		else
-		{
-			mSubObj.SuggestByDay = 1;
-		}
-
+	{		
 		mSubObj.LastSuggestDate = mCal_Current.getTime();
 		mSubObj.LastSuggestrID = mSuggestObj.SuggestID;
 		mSubObj.TotalSuggest++;
@@ -334,7 +324,16 @@ public class BuySuggest extends ContentAbstract
 				mMTType = MTType.BuySugAnswerRight;
 				return AddToList();
 			}
-
+			
+			if (mSubObj.CheckLastSuggestDate(mCal_Current))
+			{
+				mSubObj.SuggestByDay++;
+			}
+			else
+			{
+				mSubObj.SuggestByDay = 1;
+			}
+			
 			mSuggestObj = CurrentData.Get_SuggestObj(mSubObj.SuggestByDay);
 			if (mSuggestObj.IsNull())
 			{
@@ -361,7 +360,6 @@ public class BuySuggest extends ContentAbstract
 			}
 
 			CreateUpdateSub();
-			
 
 			// Cập nhật thông tin vào DB
 			UpdateSubInfo();
