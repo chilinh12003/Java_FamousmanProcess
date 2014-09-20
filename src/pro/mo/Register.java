@@ -284,7 +284,7 @@ public class Register extends ContentAbstract
 			Init(msgObject, keyword);
 
 			// Lấy đối tác dựa vào Keyword.
-			PartnerID = mKeyword.GetPartnerID(msgObject.getKeyword());
+			PartnerID = mKeyword.GetPartnerID(msgObject.getUsertext());
 
 			Integer PID = MyConvert.GetPIDByMSISDN(mMsgObject.getUserid(), LocalConfig.MAX_PID);
 

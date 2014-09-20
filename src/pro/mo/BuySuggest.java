@@ -119,8 +119,8 @@ public class BuySuggest extends ContentAbstract
 			else
 			{
 				String MTContent = Common.GetDefineMT_Message(mMTType);
-				MTContent = MTContent.replace(" [PlayDate]",CurrentData.Get_Current_QuestionObj().Get_PlayDate());
-				MTContent = MTContent.replace(" [NextDate]",CurrentData.Get_Current_QuestionObj().Get_NextDate());
+				MTContent = MTContent.replace("[PlayDate]",CurrentData.Get_Current_QuestionObj().Get_PlayDate());
+				MTContent = MTContent.replace("[NextDate]",CurrentData.Get_Current_QuestionObj().Get_NextDate());
 				
 				if (!MTContent.equalsIgnoreCase(""))
 				{

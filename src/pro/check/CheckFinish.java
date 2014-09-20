@@ -55,24 +55,31 @@ public class CheckFinish extends Thread
 
 				if (IsSameTime && IsRunning == false)
 				{
+					QuestionObject mQuestionObj = new QuestionObject();
+
+					mQuestionObj = CurrentData.Get_Yesterday_QuestionObj();
+
+					if (mQuestionObj.IsNull())
+					{
+						mLog.log.warn("Khong tim thay Question ngay hom qua -->" + mQuestionObj.GetLog());
+						mLog.log.warn("KET THUC PROCESS TIM NGUOI CHIEN THANG -- DO KO LAY DUOC QUESTION CUA NGAY HOM QUA");
+						Sleep();
+						continue;
+					}
+					else
+					{
+						mLog.log.info("Thong tin ve Question -->" + mQuestionObj.GetLog());
+					}
+
 					// Lấy danh sách các Dữ kiện đã được mua ít nhất và tồn tài
 					// câu trả lời đúng
-					Vector<SuggestCountObject> mListSuggestCount_Min = GetListSuggestCount_BuyMin();
+					Vector<SuggestCountObject> mListSuggestCount_Min = GetListSuggestCount_BuyMin(mQuestionObj.QuestionID);
 
 					// Lấy người chiến thắng đã trả lời đúng, sớm nhất trong tập
 					// mListSuggestCount_Min ở trên.
 					PlayObject mPlayObj_Winner = GetWinner(mListSuggestCount_Min);
 
-					QuestionObject mQuestionObj = new QuestionObject();
-
-					if (mListSuggestCount_Min == null || mListSuggestCount_Min.size() < 1 || mPlayObj_Winner.IsNull())
-					{
-						mQuestionObj = CurrentData.Get_Yesterday_QuestionObj();
-					}
-					else
-					{
-						mQuestionObj = CurrentData.Get_QuestionObj(mPlayObj_Winner.QuestionID);
-					}
+					mLog.log.info("Thong tin nguoi chien thang -->" + mPlayObj_Winner.GetLog());
 
 					if (InsertWinner(mListSuggestCount_Min, mPlayObj_Winner, mQuestionObj))
 					{
@@ -109,19 +116,23 @@ public class CheckFinish extends Thread
 
 			IsRunning = false;
 
-			try
-			{
-				mLog.log.debug("CHECK FINISH SE DELAY " + LocalConfig.FINISH_TIME_DELAY + " {HUT.");
-				mLog.log.debug("---------------KET THUC CHECK FINISH --------------------");
-				sleep(LocalConfig.FINISH_TIME_DELAY * 60 * 1000);
-			}
-			catch (InterruptedException ex)
-			{
-				mLog.log.error("Error Sleep thread", ex);
-			}
+			Sleep();
 		}
 	}
 
+	private void Sleep()
+	{
+		try
+		{
+			mLog.log.debug("CHECK FINISH SE DELAY " + LocalConfig.FINISH_TIME_DELAY + " {HUT.");
+			mLog.log.debug("---------------KET THUC CHECK FINISH --------------------");
+			sleep(LocalConfig.FINISH_TIME_DELAY * 60 * 1000);
+		}
+		catch (InterruptedException ex)
+		{
+			mLog.log.error("Error Sleep thread", ex);
+		}
+	}
 	private void Delete_SuggestCount() throws Exception
 	{
 		MyTableModel mTable = new MyTableModel(null, null);
@@ -222,7 +233,7 @@ public class CheckFinish extends Thread
 			SuggestCountObject mSuggestCountObj_Winner = new SuggestCountObject();
 			for (SuggestCountObject mObject : mListSuggestCount_Min)
 			{
-				if (mObject.SuggestID ==mPlayObj_Winner.SuggestID)
+				if (mObject.SuggestID == mPlayObj_Winner.SuggestID)
 				{
 					mSuggestCountObj_Winner = (SuggestCountObject) mObject.clone();
 					break;
@@ -240,13 +251,9 @@ public class CheckFinish extends Thread
 			mRow.SetValueCell("ReceiveDate", MyConfig.Get_DateFormat_InsertDB().format(mPlayObj_Winner.ReceiveDate));
 		}
 
-		if (mQuestionObj.QuestionID > 0)
-		{
-			mTable_Winner.AddNewRow(mRow);
-			boolean Result = mWinner.Insert(0, mTable_Winner.GetXML());
-			return Result;
-		}
-		return false;
+		mTable_Winner.AddNewRow(mRow);
+		boolean Result = mWinner.Insert(0, mTable_Winner.GetXML());
+		return Result;
 
 	}
 
@@ -257,12 +264,12 @@ public class CheckFinish extends Thread
 	 * @return
 	 * @throws Exception
 	 */
-	private Vector<SuggestCountObject> GetListSuggestCount_BuyMin() throws Exception
+	private Vector<SuggestCountObject> GetListSuggestCount_BuyMin(int QuestionID) throws Exception
 	{
 		SuggestCount mSuggestCount = new SuggestCount(LocalConfig.mDBConfig_MSSQL);
 
 		// Lấy tất cả các thống kê
-		MyTableModel mTable = mSuggestCount.Select(4);
+		MyTableModel mTable = mSuggestCount.Select(2, Integer.toString(QuestionID));
 
 		Vector<SuggestCountObject> mListSuggestCount = SuggestCountObject.ConvertToList(mTable);
 

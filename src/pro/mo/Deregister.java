@@ -21,6 +21,7 @@ import dat.content.DefineMT.MTType;
 import dat.history.MOLog;
 import dat.history.MOObject;
 import dat.sub.Subscriber;
+import dat.sub.Subscriber.Status;
 import dat.sub.SubscriberObject;
 import dat.sub.UnSubscriber;
 import db.define.MyTableModel;
@@ -147,6 +148,7 @@ public class Deregister extends ContentAbstract
 	{
 		mSubObj.mChannelType = ChannelType.FromInt(mMsgObject.getChannelType());
 		mSubObj.DeregDate = mCal_Current.getTime();
+		
 	}
 
 	protected Collection<MsgObject> getMessages(MsgObject msgObject, Keyword keyword) throws Exception

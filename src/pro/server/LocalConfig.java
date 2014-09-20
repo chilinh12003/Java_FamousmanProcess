@@ -133,7 +133,12 @@ public class LocalConfig
 	public static Integer PUSHMT_TIME_DELAY = 60;
 	public static Integer PUSHMT_PROCESS_NUMBER = 1;
 	public static Integer PUSHMT_ROWCOUNT = 10;
-
+	/**
+	 * Số lượng MT ngắn được push sang VInaphone trong vòng 1 giây
+	 */
+	public static int PUSHMT_TPS = 30;
+	
+	
 	public static Integer MAX_PID = 50;
 
 	
@@ -247,7 +252,7 @@ public class LocalConfig
 			PUSHMT_ROWCOUNT = Integer.parseInt(properties.getProperty("PUSHMT_ROWCOUNT", PUSHMT_ROWCOUNT.toString()));
 			PUSHMT_PROCESS_NUMBER = Integer.parseInt(properties.getProperty("PUSHMT_PROCESS_NUMBER",
 					PUSHMT_PROCESS_NUMBER.toString()));		
-			
+			PUSHMT_TPS = Integer.parseInt(properties.getProperty("PUSHMT_TPS", Integer.toString(PUSHMT_TPS)));
 			return true;
 
 		}

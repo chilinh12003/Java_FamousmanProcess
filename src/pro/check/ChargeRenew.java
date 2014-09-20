@@ -160,7 +160,7 @@ public class ChargeRenew extends Thread
 							mSubObj.RetryChargeDate = mCal_Current.getTime();
 
 							// Hủy nhưng ko gửi MT
-							DeregSub(mSubObj, false);
+							DeregSub(mSubObj,ChannelType.SUBNOTEXIST, false);
 							continue;
 						}
 
@@ -169,7 +169,7 @@ public class ChargeRenew extends Thread
 						{
 							mSubObj.RetryChargeDate = mCal_Current.getTime();
 
-							DeregSub(mSubObj, true);
+							DeregSub(mSubObj,ChannelType.MAXRETRY, true);
 							continue;
 						}
 
@@ -336,18 +336,19 @@ public class ChargeRenew extends Thread
 	/**
 	 * Hủy dịch vụ một số thuê bao khi charge không thành công
 	 */
-	private void DeregSub(SubscriberObject mSubObj, boolean AllowSendMT)
+	private void DeregSub(SubscriberObject mSubObj,ChannelType mChannelType, boolean AllowSendMT)
 	{
 		try
 		{
-
 			MyTableModel mTable_UnSub = CurrentData.GetTable_UnSub();
 
+			mSubObj.DeregDate = Calendar.getInstance().getTime();
+			
 			mTable_UnSub = mSubObj.AddNewRow(mTable_UnSub);
 			String XML = mTable_UnSub.GetXML();
 			// Tiến hành hủy đăng ký khi mà retry không
 			// thành công
-			if (ErrorCode.ChargeSuccess != mCharge.ChargeDereg(mSubObj, ChannelType.MAXRETRY, "UNREG"))
+			if (ErrorCode.ChargeSuccess != mCharge.ChargeDereg(mSubObj, mChannelType, "UNREG"))
 			{
 				MyLogger.WriteDataLog(LocalConfig.LogDataFolder, "_Charge_Sync_Dereg_VNP_FAIL",
 						"DEREG RECORD FAIL --> " + XML);

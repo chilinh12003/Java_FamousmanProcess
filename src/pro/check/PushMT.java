@@ -130,6 +130,12 @@ public class PushMT extends Thread
 							mLog.log.info("Pust MT OK -->MSISDN:" + mSubObj.MSISDN + "|NewsID:"
 									+ mPushMTObj.mNewsObj.NewsID);
 						}
+						
+						if(mPushMTObj.DelaySendMT > 0)
+						{
+							mLog.log.info("PushMT Delay: " + Integer.toString(mPushMTObj.DelaySendMT));
+							Thread.sleep(mPushMTObj.DelaySendMT);
+						}
 					}
 					Insert_MOLog();
 					mTable.Clear();
