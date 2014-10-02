@@ -14,7 +14,7 @@ import pro.server.LocalConfig;
 import pro.server.Program;
 import uti.utility.MyConfig;
 import uti.utility.MyConfig.ChannelType;
-import uti.utility.MyConfig.VNPApplication;
+import uti.utility.VNPApplication;
 import uti.utility.MyDate;
 import uti.utility.MyLogger;
 import dat.content.DefineMT.MTType;
@@ -320,7 +320,7 @@ public class ChargeRenew extends Thread
 
 			MOObject mMOObj = new MOObject(mSubObj.MSISDN, mChannelType, mMTType, "", MTContent, "0",
 					mSubObj.PID, Calendar.getInstance().getTime(), Calendar.getInstance().getTime(),
-					VNPApplication.NoThing, "", "", mSubObj.PartnerID);
+					new VNPApplication(), "", "", mSubObj.PartnerID);
 			mTable_MOLog = mMOObj.AddNewRow(mTable_MOLog);
 			mMOLog.Insert(0, mTable_MOLog.GetXML());
 		}

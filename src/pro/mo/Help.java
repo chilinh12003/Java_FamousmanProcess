@@ -10,7 +10,7 @@ import pro.server.Keyword;
 import pro.server.LocalConfig;
 import pro.server.MsgObject;
 import uti.utility.MyConfig.ChannelType;
-import uti.utility.MyConfig.VNPApplication;
+import uti.utility.VNPApplication;
 import uti.utility.MyConvert;
 import uti.utility.MyLogger;
 import dat.content.DefineMT;
@@ -86,7 +86,7 @@ public class Help extends ContentAbstract
 			MOObject mMOObj = new MOObject(mMsgObject.getUserid(), ChannelType.FromInt(mMsgObject.getChannelType()),
 					mMTType_Current, mMsgObject.getMO(), MTContent_Current, mMsgObject.getRequestid().toString(),
 					MyConvert.GetPIDByMSISDN(mMsgObject.getUserid(), LocalConfig.MAX_PID), mMsgObject.getReceiveDate(),
-					Calendar.getInstance().getTime(), VNPApplication.NoThing, null, null, 0);
+					Calendar.getInstance().getTime(), new VNPApplication(), null, null, 0);
 
 			mTable_MOLog = mMOObj.AddNewRow(mTable_MOLog);
 
