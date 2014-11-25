@@ -155,14 +155,14 @@ public abstract class ContentAbstract
 		// int idsendqueue =
 		// LocalConfig.getIDdbsendqueue(msgObject.getUserid());
 		
-		//Vì VNP cho phép bắn bản tin ngắn đến 254 ký tự.
-		//nên, nếu Nội dung < 254 ký tự thì chuyển sang bắn dạng bản tin ngắn
+		//Vì VNP cho phép bắn bản tin ngắn đến 160 ký tự.
+		//nên, nếu Nội dung < 160 ký tự thì chuyển sang bắn dạng bản tin ngắn
 		if (msgObject.getUsertext().length() <= 160)
 		{
 			msgObject.setContenttype(0);
 		}
 
-		//Nếu là bắn bản tin ngắn mà nội dung lớn hơn 254 thì phải chia ra từ bản tin
+		//Nếu là bắn bản tin ngắn mà nội dung lớn hơn 160 thì phải chia ra từ bản tin
 		if (msgObject.getContenttype() == 0 && msgObject.getUsertext().length() > 160)
 		{
 			String mtcontent = msgObject.getUsertext();
@@ -189,7 +189,7 @@ public abstract class ContentAbstract
 			}
 			return 1;
 		}
-		//Bắn bản tin dài hoặc bản tin ngắn nhỏ ơn 254
+		//Bắn bản tin dài hoặc bản tin ngắn nhỏ ơn 160
 		else return sendMT(msgObject);
 
 	}
