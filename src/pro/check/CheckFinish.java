@@ -1,6 +1,7 @@
 package pro.check;
 
 import java.util.Calendar;
+import java.util.Date;
 import java.util.Vector;
 
 import pro.server.Common;
@@ -9,6 +10,7 @@ import pro.server.LocalConfig;
 import pro.server.Program;
 import uti.utility.MyCheck;
 import uti.utility.MyConfig;
+import uti.utility.MyDate;
 import uti.utility.MyLogger;
 import dat.content.DefineMT.MTType;
 import dat.content.News;
@@ -22,6 +24,8 @@ import dat.history.SuggestCount;
 import dat.history.SuggestCountLog;
 import dat.history.SuggestCountObject;
 import dat.history.Winner;
+import dat.history.WinnerWeek;
+import dat.history.WinnerWeekObject;
 import db.define.MyDataRow;
 import db.define.MyTableModel;
 
@@ -36,7 +40,7 @@ public class CheckFinish extends Thread
 	}
 
 	public void run()
-	{
+	{		
 		while (Program.processData)
 		{
 			mLog.log.debug("---------------BAT DAU CHECK FINISH PHIEN --------------------");
@@ -86,6 +90,9 @@ public class CheckFinish extends Thread
 						// Insert MT thông báo người chiến thằng vào table news,
 						// chờ admin duyệt để push tin
 						InsertNotifyWinner(mPlayObj_Winner, mQuestionObj);
+						
+						//Tìm người chiến thắng theo tuần
+						SyncWinnerWeek();
 					}
 					else
 					{
@@ -254,7 +261,6 @@ public class CheckFinish extends Thread
 		mTable_Winner.AddNewRow(mRow);
 		boolean Result = mWinner.Insert(0, mTable_Winner.GetXML());
 		return Result;
-
 	}
 
 	/**
@@ -352,4 +358,161 @@ public class CheckFinish extends Thread
 		return mPlayObj_Winner;
 	}
 
+	/**
+	 * Tính toán để tìm ra người trúng thưởng theo tuần, và insert xuống table Winner Week.
+	 */
+	private void SyncWinnerWeek()
+	{
+		try
+		{
+			// Lấy các winner ngày trong tuần
+			Calendar mCal_Current = Calendar.getInstance();
+			if (mCal_Current.get(Calendar.DAY_OF_WEEK) == Calendar.MONDAY)
+			{
+				// Nếu ngày hiện tại là thứ 2, thì giảm đi một ngày, để lấy thời
+				// điểm của tuần trước
+				mCal_Current.add(Calendar.DATE, -3);
+			}
+			Calendar mCal_Monday = MyDate.GetMonday(mCal_Current);
+			Calendar mCal_Sunday = MyDate.GetSunday(mCal_Current);
+
+			Calendar mCal_Thursday = Calendar.getInstance();
+			mCal_Thursday.setTime(mCal_Monday.getTime());
+			mCal_Thursday.add(Calendar.DATE, 3);
+
+			Winner mWinner = new Winner(LocalConfig.mDBConfig_MSSQL);
+
+			// Lấy các thuê bao chiến thắng trong tuần
+			MyTableModel mTable = mWinner.Select(3, MyConfig.Get_DateFormat_InsertDB().format(mCal_Monday.getTime()),
+					MyConfig.Get_DateFormat_InsertDB().format(mCal_Sunday.getTime()));
+
+			if (mTable == null || mTable.GetRowCount() < 1)
+				return;
+
+			Vector<WinnerWeekObject> mList = new Vector<WinnerWeekObject>();
+
+			// Lấy danh sách các thuê bao chiến thắng trong tuần, và tính toán
+			// số lần chiến thắng, tổng thời gian trả lời
+			for (int i = 0; i < mTable.GetRowCount(); i++)
+			{
+				boolean IsExist = false;
+				WinnerWeekObject mObject = GetWinnerWeek(mList, mTable.GetValueAt(i, "MSISDN").toString());
+				if (!mObject.IsNull())
+					IsExist = true;
+
+				mObject.MSISDN = mTable.GetValueAt(i, "MSISDN").toString();
+				mObject.BeginSession = mCal_Monday.getTime();
+				mObject.EndSession = mCal_Sunday.getTime();
+				mObject.WeekOfYear = mCal_Thursday.get(Calendar.WEEK_OF_YEAR);
+				mObject.WinnerCount += 1;
+				mObject.TotalTime += GetTotalTime(MyConfig.Get_DateFormat_InsertDB().parse(
+						mTable.GetValueAt(i, "ReceiveDate").toString()));
+
+				if (!IsExist)
+				{
+					mList.add(mObject);
+				}
+			}
+
+			if (mList.size() < 1)
+				return;
+
+			
+			int Max_WinnerCount = 0;
+			for (WinnerWeekObject mObj : mList)
+			{
+				if (mObj.WinnerCount > Max_WinnerCount)
+					Max_WinnerCount = mObj.WinnerCount;
+			}
+			
+			
+			// Lấy danh sách thuê bao có WinnerMaxCount
+			Vector<WinnerWeekObject> mList_MaxWinnerCount = new Vector<WinnerWeekObject>();
+			for (WinnerWeekObject mObj : mList)
+			{
+				if (mObj.WinnerCount == Max_WinnerCount)
+					mList_MaxWinnerCount.add(mObj);
+			}
+
+			if (mList_MaxWinnerCount.size() < 1)
+				return;
+
+			
+			//Lấy tổng thời gian nhỏ nhất
+			long Min_TotalTime = mList_MaxWinnerCount.get(0).TotalTime;
+			for (WinnerWeekObject mObj : mList_MaxWinnerCount)
+			{
+				if (mObj.TotalTime < Min_TotalTime)
+					Min_TotalTime = mObj.TotalTime;
+			}
+			
+			
+			Vector<WinnerWeekObject> mList_MinTotalTime = new Vector<WinnerWeekObject>();
+			for (WinnerWeekObject mObj : mList_MaxWinnerCount)
+			{
+				if (mObj.TotalTime == Min_TotalTime)
+					mList_MinTotalTime.add(mObj);
+			}
+			
+			WinnerWeek mWinnerWeek = new WinnerWeek(LocalConfig.mDBConfig_MSSQL);
+			
+			MyTableModel mTable_WeekWinner = mWinnerWeek.Select(0);
+			
+			for (WinnerWeekObject mObj : mList_MinTotalTime)
+			{
+				mLog.log.info(mObj.GetLog());
+				mObj.AddNewRow(mTable_WeekWinner);
+			}
+			
+			mWinnerWeek.Insert(1, mTable_WeekWinner.GetXML());
+		}
+		catch (Exception ex)
+		{
+			mLog.log.error(ex);
+		}
+	}
+
+	/**
+	 * Lấy tổng thời gian trả lời trong ngày của thuê bao
+	 * 
+	 * @param AnswerDate
+	 * @return
+	 * @throws Exception
+	 */
+	private long GetTotalTime(Date AnswerDate) throws Exception
+	{
+		Calendar mCal_Answer = Calendar.getInstance();
+		Calendar mCal_Begin = Calendar.getInstance();
+
+		mCal_Answer.setTime(AnswerDate);
+		mCal_Begin.setTime(AnswerDate);
+		mCal_Begin.set(Calendar.HOUR_OF_DAY, 8);
+		mCal_Begin.clear(Calendar.MINUTE);
+		mCal_Begin.clear(Calendar.SECOND);
+		mCal_Begin.clear(Calendar.MILLISECOND);
+
+		long TotalMili = mCal_Answer.getTimeInMillis() - mCal_Begin.getTimeInMillis();
+
+		return TotalMili;
+
+	}
+	/**
+	 * Lấy một object dựa theo MSISDN
+	 * 
+	 * @param mList
+	 * @param MSISDN
+	 * @return
+	 * @throws Exception
+	 */
+	private WinnerWeekObject GetWinnerWeek(Vector<WinnerWeekObject> mList, String MSISDN) throws Exception
+	{
+		for (WinnerWeekObject mObject : mList)
+		{
+			if (mObject.MSISDN.equalsIgnoreCase(MSISDN))
+				return mObject;
+		}
+		return new WinnerWeekObject();
+	}
+
+	
 }
