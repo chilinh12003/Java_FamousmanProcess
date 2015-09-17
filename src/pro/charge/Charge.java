@@ -260,7 +260,6 @@ public class Charge
 			
 			mTableLog.AddNewRow(mRow_Log);
 			return mChargeLog.Insert(0, mTableLog.GetXML());
-
 		}
 		catch (Exception ex)
 		{
